@@ -8,24 +8,24 @@ prepareEnshroudedAppFolders() {
 
 # Generate crontab file for supercronic
 initCrontab() {
-  local crontab_file="/var/run/enshrouded/crontab"
+  local crontab_file="${install_path}/crontab"
   
   # Create empty crontab file
   > "$crontab_file"
   
   if [ -n "$UPDATE_CRON" ]; then
     info "Update cron scheduled: $UPDATE_CRON"
-    echo "$UPDATE_CRON supervisorctl start enshrouded-updater >/dev/null 2>&1" >> "$crontab_file"
+    echo "$UPDATE_CRON supervisorctl start enshrouded-updater 2>&1" >> "$crontab_file"
   fi
   
   if [ -n "$BACKUP_CRON" ]; then
     info "Backup cron scheduled: $BACKUP_CRON"
-    echo "$BACKUP_CRON supervisorctl start enshrouded-backup >/dev/null 2>&1" >> "$crontab_file"
+    echo "$BACKUP_CRON supervisorctl start enshrouded-backup 2>&1" >> "$crontab_file"
   fi
   
   if [ -n "$RESTART_CRON" ]; then
     info "Restart cron scheduled: $RESTART_CRON"
-    echo "$RESTART_CRON supervisorctl start enshrouded-restart >/dev/null 2>&1" >> "$crontab_file"
+    echo "$RESTART_CRON supervisorctl start enshrouded-restart 2>&1" >> "$crontab_file"
   fi
   
   # If no cron jobs configured, add a comment so supercronic has a valid file
