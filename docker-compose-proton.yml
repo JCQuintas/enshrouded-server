@@ -8,6 +8,8 @@ services:
     hostname: enshrouded
     restart: unless-stopped
     stop_grace_period: 90s
+    # Run as specific user (UID:GID) - replace with your user's IDs
+    user: "1000:1000"
     ports:
       - "15637:15637/udp"
     volumes:
@@ -16,7 +18,5 @@ services:
       - /dev/ntsync:/dev/ntsync
     environment:
       - SERVER_NAME=MornedhelsTest
-      - PUID=4711
-      - PGID=4711
       - UPDATE_CRON=*/30 * * * *
       - log_level=50

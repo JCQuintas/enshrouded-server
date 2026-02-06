@@ -17,10 +17,6 @@ enshrouded_server_pidfile=/var/run/enshrouded/enshrouded-server.pid
 enshrouded_updater_pidfile=/var/run/enshrouded/enshrouded-updater.pid
 enshrouded_backup_pidfile=/var/run/enshrouded/enshrouded-backup.pid
 
-# Syslog supervisor config file
-supervisor_syslog_conf=/usr/local/etc/supervisor/conf.d/syslog.conf
-rsyslog_conf=/etc/rsyslog.d/stdout.conf
-
 # WINE
 WINEPREFIX=/home/enshrouded/
 WINEARCH=win64
