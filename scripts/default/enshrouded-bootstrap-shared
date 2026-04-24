@@ -6,31 +6,36 @@ prepareEnshroudedAppFolders() {
   mkdir -p "$install_path"
 }
 
+# Generate crontab file for supercronic
 initCrontab() {
-  crontab=$(mktemp)
-
+  local crontab_file="/var/run/enshrouded/crontab"
+  
+  # Create empty crontab file
+  > "$crontab_file"
+  
   if [ -n "$UPDATE_CRON" ]; then
-    debug "creating cron for update checks (schedule: $UPDATE_CRON)"
-    echo "$UPDATE_CRON supervisorctl start enshrouded-updater >/dev/null 2>&1" >>"$crontab"
+    info "Update cron scheduled: $UPDATE_CRON"
+    echo "$UPDATE_CRON supervisorctl start enshrouded-updater >/dev/null 2>&1" >> "$crontab_file"
   fi
-
+  
   if [ -n "$BACKUP_CRON" ]; then
-    debug "creating cron for backups (schedule: $BACKUP_CRON)"
-    echo "$BACKUP_CRON supervisorctl start enshrouded-backup >/dev/null 2>&1" >>"$crontab"
+    info "Backup cron scheduled: $BACKUP_CRON"
+    echo "$BACKUP_CRON supervisorctl start enshrouded-backup >/dev/null 2>&1" >> "$crontab_file"
   fi
-
+  
   if [ -n "$RESTART_CRON" ]; then
-    debug "creating cron for server restarts (schedule: $RESTART_CRON)"
-    echo "$RESTART_CRON supervisorctl start enshrouded-restart >/dev/null 2>&1" >>"$crontab"
+    info "Restart cron scheduled: $RESTART_CRON"
+    echo "$RESTART_CRON supervisorctl start enshrouded-restart >/dev/null 2>&1" >> "$crontab_file"
   fi
-
-
-  crontab "$crontab"
-  rm -f "$crontab"
+  
+  # If no cron jobs configured, add a comment so supercronic has a valid file
+  if [ ! -s "$crontab_file" ]; then
+    echo "# No cron jobs configured" >> "$crontab_file"
+  fi
 }
 
 prepareSteamA2sPythonLibrary() {
-  pip3 install python-a2s==1.3.0 --break-system-packages
+  pip3 install python-a2s==1.3.0 --break-system-packages --user
 }
 
 bootstrapHook() {

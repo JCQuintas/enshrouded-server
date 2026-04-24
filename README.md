@@ -24,8 +24,6 @@ updates and cleanup.
 | `SERVER_VOICE_CHAT_MODE`                                                                                     |          | `Proximity`         | Proximity \| Global   | This setting allows switching between the proximity voice chat and the global, server-wide voice chat              |     |
 | `SERVER_ENABLE_VOICE_CHAT`                                                                                   |          | `false`             | boolean (true, false) | This setting allows switching voice chat completely off or enabling it.                                            |     |
 | `SERVER_ENABLE_TEXT_CHAT`                                                                                    |          | `false`             | boolean (true, false) | This setting allows switching text chat completely off or enabling it.                                             |     |
-| `PUID`                                                                                                       |          | `4711`              | integer               | The UID to run server as (file permission)                                                                         |     |
-| `PGID`                                                                                                       |          | `4711`              | integer               | The GID to run server as (file permission)                                                                         |     |
 | `UPDATE_CRON`                                                                                                |          |                     | string (cron format)  | Update game server files cron (eg. `*/30 * * * *` check for updates every 30 minutes)                              |     |
 | `UPDATE_CHECK_PLAYERS`                                                                                       |          | `false`             | boolean (true, false) | Should the update check if someone is connected                                                                    |     |
 | `BACKUP_CRON`                                                                                                |          |                     | string (cron format)  | Backup game server files cron (eg. `*/15 * * * *` backup saves every 15 minutes) - don't set cron under 10 minutes |     |
@@ -93,8 +91,8 @@ The scripts will wait for the hook to resolve/return before continuing.
 |-----------------|----------------------------------|
 | /opt/enshrouded | Game files (steam download path) |
 
-**Note:** By default the volumes are created with the UID and GID 4711 (that user should not exist). To change this, set
-the environment variables `PUID` and `PGID`.
+**Note:** The container runs as the user specified via Docker's `--user` flag. Make sure the mounted volumes are owned
+by or writable by this user. You can use `--user $(id -u):$(id -g)` to run as your current user.
 
 ## Recommended System Requirements
 
@@ -112,12 +110,11 @@ the environment variables `PUID` and `PGID`.
 docker run -d --name enshrouded \
   --hostname enshrouded \
   --restart=unless-stopped \
+  --user $(id -u):$(id -g) \
   -p 15637:15637/udp \
   -v ./game:/opt/enshrouded \
   -e SERVER_NAME="Enshrouded Server" \
   -e UPDATE_CRON="*/30 * * * *" \
-  -e PUID=4711 \
-  -e PGID=4711 \
   mornedhels/enshrouded-server:latest
 ```
 
@@ -131,6 +128,8 @@ services:
     hostname: enshrouded
     restart: unless-stopped
     stop_grace_period: 90s
+    # Run as specific user (UID:GID) - replace with your user's IDs
+    user: "1000:1000"
     ports:
       - "15637:15637/udp"
     volumes:
@@ -141,8 +140,6 @@ services:
     environment:
       - SERVER_NAME=Enshrouded Server
       - UPDATE_CRON=*/30 * * * *
-      - PUID=4711
-      - PGID=4711
 ```
 
 **Note:** The volumes are created next to the docker-compose.yml file. If you want to create the volumes, in the default
@@ -156,6 +153,8 @@ services:
     hostname: enshrouded
     restart: unless-stopped
     stop_grace_period: 90s
+    # Run as specific user (UID:GID) - replace with your user's IDs
+    user: "1000:1000"
     ports:
       - "15637:15637/udp"
     volumes:
@@ -166,8 +165,6 @@ services:
     environment:
       - SERVER_NAME=Enshrouded Server
       - UPDATE_CRON=*/30 * * * *
-      - PUID=4711
-      - PGID=4711
 
 volumes:
   game:
@@ -186,9 +183,8 @@ To restore a backup, stop the server and simply extract the zip file to the save
 again. If you want to keep the current savegame, make sure to make a backup before deleting or overwriting the files.
 
 > [!WARNING]  
-> Verify the permissions of the extracted files. The files should be owned by the user with the UID and GID set in the
-> environment variables. If the image is running in privileged mode, the files will be automatically chowned to the
-> given `UID` and `GID`.
+> Verify the permissions of the extracted files. The files should be owned by or writable by the user specified
+> via Docker's `--user` flag.
 
 ## Commands
 
@@ -212,7 +208,7 @@ again. If you want to keep the current savegame, make sure to make a backup befo
   Error! App '2278520' state is 0x202 after update job.
   ```
   This means there is probably something wrong with your file permissions, or you don't have enough disk space left.
-  Make sure the UID and GID are correct and the files are owned by the correct user.
+  Make sure the mounted volumes are owned by or writable by the user specified via Docker's `--user` flag.
 * The (auto-)update fails with the following error:
   ```
   Error! App '2278520' state is 0x6 after update job.

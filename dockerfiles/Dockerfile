@@ -6,14 +6,18 @@ RUN apt-get update \
     && DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
         curl \
         supervisor \
-        cron \
-        rsyslog \
         jq \
         zip \
         python3 \
         python3-pip \
     && apt autoremove --purge && apt clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install supercronic (cron alternative for containers, runs as non-root)
+ARG SUPERCRONIC_VERSION=v0.2.33
+ARG SUPERCRONIC_ARCH=linux-amd64
+RUN curl -fsSL "https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-${SUPERCRONIC_ARCH}" -o /usr/local/bin/supercronic \
+    && chmod +x /usr/local/bin/supercronic
 
 # Install wine
 ARG WINE_BRANCH=stable
@@ -31,15 +35,18 @@ RUN curl -o /tmp/winetricks https://raw.githubusercontent.com/Winetricks/winetri
     && chmod +x /tmp/winetricks && install -m 755 /tmp/winetricks /usr/local/bin/winetricks \
     && rm -rf /tmp/*
 
-# MISC
+# MISC - Create directories with open permissions for rootless mode
+# The container runs as the user specified via docker --user flag
 RUN mkdir -p /usr/local/etc /var/log/supervisor /var/run/enshrouded /usr/local/etc/supervisor/conf.d/ /opt/enshrouded /home/enshrouded/.steam \
-    && groupadd -g "${PGID:-4711}" -o enshrouded \
-    && useradd -g "${PGID:-4711}" -u "${PUID:-4711}" -o --create-home enshrouded \
-    && sed -i '/imklog/s/^/#/' /etc/rsyslog.conf \
+    && chmod 777 /var/log/supervisor /var/run/enshrouded /opt/enshrouded /home/enshrouded /home/enshrouded/.steam \
+    && echo '# No cron jobs configured' > /var/run/enshrouded/crontab \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY ../supervisord.conf /etc/supervisor/supervisord.conf
 COPY --chmod=755 ../scripts/default/* ../scripts/wine/* /usr/local/etc/enshrouded/
+
+# Make supervisor config readable by all users
+RUN chmod 644 /etc/supervisor/supervisord.conf
 
 WORKDIR /usr/local/etc/enshrouded
 CMD ["/usr/local/etc/enshrouded/bootstrap"]
