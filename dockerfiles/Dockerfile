@@ -14,6 +14,13 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install supercronic (cron alternative for containers, runs as non-root)
+# The updater counts connected players with python-a2s before it updates or restarts the server.
+# Installed here, system-wide, because the server runs unprivileged: an install at start-up can only
+# go into one user's home, which the updater (HOME=/root under supervisord) never looks in. 1.3.0
+# fails on Python 3.14 (KeyError: '__annotations__').
+ARG PYTHON_A2S_VERSION=1.4.2
+RUN pip3 install --no-cache-dir --break-system-packages "python-a2s==${PYTHON_A2S_VERSION}"
+
 ARG SUPERCRONIC_VERSION=v0.2.33
 ARG SUPERCRONIC_ARCH=linux-amd64
 RUN curl -fsSL "https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-${SUPERCRONIC_ARCH}" -o /usr/local/bin/supercronic \

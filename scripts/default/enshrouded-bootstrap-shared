@@ -34,10 +34,6 @@ initCrontab() {
   fi
 }
 
-prepareSteamA2sPythonLibrary() {
-  pip3 install python-a2s==1.3.0 --break-system-packages --user
-}
-
 bootstrapHook() {
   if [ -n "$BOOTSTRAP_HOOK" ]; then
     info "Running bootstrap hook: $BOOTSTRAP_HOOK"
